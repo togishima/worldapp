@@ -72755,9 +72755,37 @@ __webpack_require__(/*! ./bootstrap */ "./resources/js/bootstrap.js"); //gio.js
 window.three = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 window.GIO = __webpack_require__(/*! giojs */ "./node_modules/giojs/build/gio.module.js");
 var container = document.getElementById("globalArea");
-var controller = new GIO.Controller(container);
-controller.init();
+var configs = {
+  "control": {
+    "stats": false,
+    "disableUnmentioned": false,
+    "lightenMentioned": false,
+    "inOnly": false,
+    "outOnly": false,
+    "initCountry": "CN",
+    "halo": true,
+    "transparentBackground": false,
+    "autoRotation": false,
+    "rotationRatio": 1
+  },
+  "color": {
+    "surface": 1749093,
+    "selected": 1827421,
+    "in": 5111795,
+    "out": 14831145,
+    "halo": 9895823,
+    "background": 0
+  },
+  "brightness": {
+    "ocean": 0,
+    "mentioned": 0,
+    "related": 0.5
+  }
+};
+var controller = new GIO.Controller(container, configs);
+controller.setInitCountry("JP");
 controller.addData(data);
+controller.init();
 
 /***/ }),
 
