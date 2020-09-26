@@ -9,7 +9,8 @@ class Country extends Model
 {
     protected $table = "country";
     protected $countryInfo;
-    protected $data;
+    protected $dataIn;
+    protected $dataOut;
     protected $GIOdata;    
 
     function setOECDData() {     
@@ -20,7 +21,8 @@ class Country extends Model
         $this->countryInfo = self::from('country_code')->get();
 
         //日本から各国への移民データを取得
-        $this->data = $oecd->getOutBoundData("Japan", 2012);        
+        $this->dataOut = $oecd->getOutBoundData("Japan", 2012);
+        $this->dataIn = $oecd->getInBoundData("Japan", 2012);
     }
 
     function findCountryCode($c_code) {
@@ -31,23 +33,18 @@ class Country extends Model
         }
     }
 
-    public function getData() {
-        return $this->data;
-    }
-
     public function getDataForGIOjs($country) {
         $gdata = [];
         $gdata['dataSetKeys'] = [];
-        $count= 1;
-        //Log::debug($country->data);
-        foreach($country->data as $year => $array) {
-            array_push($gdata['dataSetKeys'], "key".$count);
-            
-            if ($count == 1) {
-                $gdata['initDataSet'] = "key".$count;
-            }
+        $gdata['initDataSet'] = "key1";
 
-            $gdata["key".$count] =[];
+        //Outboundデータの処理
+        $count= 1;
+        foreach($country->dataOut as $year => $array) {
+            array_push($gdata['dataSetKeys'], "key".$count);
+            //キー（年度）毎に配列を作成
+            $gdata["key".$count] = [];
+
             foreach($array as $c_code => $mig_value) {
                 $tmp = [];
                 $i = $country->findCountryCode($c_code);
@@ -60,8 +57,25 @@ class Country extends Model
             }
             $count++;          
         }
+        $count = 1;
+
+        //inboundデータの処理
+        foreach($country->dataIn as $year => $array) {
+            foreach($array as $c_code => $mig_value) {
+                $tmp = [];
+                $i = $country->findCountryCode($c_code);
+                if($i == null) {
+                    continue;
+                }
+                $tmp = [
+                    "e" => $i,
+                    "i" => "JP",
+                    "v" => ($mig_value * 1000)
+                ];
+                array_push($gdata["key".$count], $tmp);
+            }
+            $count++;
+        }
         return $gdata;
     }
-
-
 }

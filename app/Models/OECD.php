@@ -26,7 +26,11 @@ class OECD {
         foreach($countryCodes as $c) {
             $countryName = trim($c['Description'][0]);
             $countryCode = trim($c['@attributes']['value']);
-            $countries[$countryName] = $countryCode;
+            if ($countryCode == "NMEC") {
+                continue;
+            } else {
+                $countries[$countryName] = $countryCode;
+            }
         }
         $this->countries = $countries;
     }
@@ -36,53 +40,76 @@ class OECD {
     }
 
     //APIクエリ用パラメーターの作成
-    function getQueryParam($country, $year) {
+    function getQueryParam($country,$datatype) {
         $countryList = $this->countries;
         $query = [];
         $query[] = 'https://stats.oecd.org/SDMX-JSON/data/MIG/';
-        //クエリの対象国（調べたい国）があるかチェック
-        if(array_key_exists($country, $countryList)) {
+        //全てを選択した場合
+        if ($datatype == "inbound") {
+            foreach($countryList as $c) {
+                if($c == "NMEC") {
+                    continue;
+                }
+                $query[] = $c;
+                if($c !== end($countryList)) {
+                    $query[] = "+";
+                }
+            }
+            $query[] = ".";
+        //クエリの対象国を絞った場合の処理
+        } elseif (array_key_exists($country, $countryList)) {
             $query[] = $countryList[$country] . '.';
+        } 
+
+        //B11 = 各国から対象国への移住数、B12=対象の国から他国への移住数、TOT＝合計
+        if($datatype == "inbound") {
+            $query[] = 'B11.TOT.';
+        } else {
+            $query[] = 'B12.TOT.';
         }
-        //B12=対象の国から他国への移住数、TOT＝合計
-        $query[] = 'B12.TOT.';
+
         //調べたい国から各国への移民数を取得する
-        foreach($countryList as $key => $value) {
-            $query[] = $value;
-            if($value !== end($countryList)) {
-                $query[] = "+";
+        if($datatype == "inbound") {
+            $query[] = $countryList[$country];
+        } else {
+            foreach($countryList as $key => $value) {
+                $query[] = $value;
+                if($value !== end($countryList)) {
+                    $query[] = "+";
+                }
             }
         }
-        //入力された年をクエリに組み込み
-        $query[] = '/OECD?startTime=' . $year . '&endTime=' . ($year+1);
+        //2012年以降のデータを取得
+        $query[] = '/OECD?startTime=2012';
 
         return implode("", $query);
     }
 
-    //jsonデータをGIO.js用に成形
-    function getOutBoundData($country, $year) {
-        //datasetsを取り出す
-        $url = self::getQUeryParam($country, $year);
-        $json = file_get_contents($url);
-        $data = json_decode($json, true);
-        Log::debug($data);
+    /**
+     * GIO.jsデータ成形用関数群
+     */
 
-        //dataSetsからobservationsの値を取り出す
+    //データセットからデータを抽出
+    function extractData($datasets) {
         $tmp = [];
-        foreach($data['dataSets'] as $dataset) {
+        foreach($datasets as $dataset) {
             foreach($dataset['series'] as $series) {
                 $tmp[] = $series['observations'];
             }
         }
+        return $tmp;
+    }
 
-        //国名を抽出
-        $countryData = $data['structure']['dimensions']['series'][3]['values'];
+    //国データから国コードを抽出
+    function extractCountryCodes($countryData) {
         $countryCodes = [];
         foreach($countryData as $data) {
-            //Log::debug($data);
             $countryCodes[] = $data['id'];
         }
-        
+        return $countryCodes;
+    }
+    //データセットを配列に成形
+    function formatData($tmp, $year, $countryCodes) {
         $numOfDataSets = 2018-$year;      
         $obsv = [];
         for($i = 0; $i < $numOfDataSets; $i++) {
@@ -97,7 +124,46 @@ class OECD {
             }
             //obsvの値のキーにセットして出力
             $obsv[$currentYear] = array_combine($countryCodes, $arr);
-        }        
+        }
         return $obsv;
+    }
+    
+    function getOutBoundData($country, $year) {
+        //datasetsを取り出す
+        $url = self::getQUeryParam($country, 'outbound');
+        $json = file_get_contents($url);
+        $data = json_decode($json, true);
+        //Log::debug($data);
+
+        //dataSetsからobservationsの値を取り出す
+        $tmp = self::extractData($data['dataSets']);
+
+        //国コードを抽出
+        $countryData = $data['structure']['dimensions']['series'][3]['values'];
+        $countryCodes = self::extractCountryCodes($countryData);
+        
+        //データを成形
+        $observationData = self::formatData($tmp, $year, $countryCodes);
+
+        return $observationData;
+    }
+
+    function getInBoundData($country, $year) {
+        //datasetsを取り出す
+        $url = self::getQUeryParam($country, 'inbound');
+        $json = file_get_contents($url);
+        $data = json_decode($json, true);
+
+        //dataSetsからobservationsの値を取り出す
+        $tmp = self::extractData($data['dataSets']);
+
+        //国名を抽出
+        $countryData = $data['structure']['dimensions']['series'][0]['values'];
+        $countryCodes = self::extractCountryCodes($countryData);
+        
+        //データを成形
+        $observationData = self::formatData($tmp, $year, $countryCodes);     
+        
+        return $observationData;
     }
 }

@@ -17,7 +17,6 @@ class CountryController extends Controller
     {
         $country = new Country;
         $country->setOECDData();
-        $data = $country->getData();
         $GIOdata = $country->getDataForGIOjs($country);
 
         Log::debug($GIOdata);
