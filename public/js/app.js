@@ -72764,7 +72764,7 @@ var configs = {
     "outOnly": false,
     "initCountry": "CN",
     "halo": true,
-    "transparentBackground": false,
+    "transparentBackground": true,
     "autoRotation": false,
     "rotationRatio": 1
   },
@@ -72786,6 +72786,65 @@ var controller = new GIO.Controller(container, configs);
 controller.setInitCountry("JP");
 controller.addData(data);
 controller.init();
+controller.onCountryPicked(callback);
+
+function callback(selectedCountry) {
+  $.ajax({
+    url: "/json/".concat(selectedCountry.ISOCode),
+    type: 'GET',
+    dataType: 'json'
+  }).done(function (results) {
+    controller.addData(results);
+    controller.switchCountry(countryCode); //controller.init();
+  }).fail(function (jqHXR, textStatus, errorThrown) {
+    alert('ファイルの取得に失敗しました。');
+    console.log("ajax通信に失敗しました");
+    console.log(jqXHR.status);
+    console.log(textStatus);
+    console.log(errorThrown.message);
+  });
+}
+
+;
+$('[name=country_selector]').on('change', function () {
+  var countryCode = $(this).val();
+  $.ajax({
+    url: "/json/".concat(countryCode),
+    type: 'GET',
+    dataType: 'json'
+  }).done(function (results) {
+    controller.clearData();
+    controller.addData(results);
+    controller.switchCountry(countryCode); //controller.init();
+  }).fail(function (jqHXR, textStatus, errorThrown) {
+    alert('ファイルの取得に失敗しました。');
+    console.log("ajax通信に失敗しました");
+    console.log(jqXHR.status);
+    console.log(textStatus);
+    console.log(errorThrown.message);
+  });
+});
+/*
+$('[name=country_selector]').on('change', function () {
+  var countryCode = $(this).val;
+
+  $.ajax({
+    url: `/json/${countryCode}`,
+    type: 'GET',
+    dataType: 'json'
+  }).done(function (results) {
+    controller.clearData();
+    controller.addData(results);
+    //controller.init();
+  }).fail(function (jqHXR, textStatus, errorThrown) {
+    alert('ファイルの取得に失敗しました。');
+    console.log("ajax通信に失敗しました")
+    console.log(jqXHR.status);
+    console.log(textStatus);
+    console.log(errorThrown.message);
+  });
+});
+*/
 
 /***/ }),
 
