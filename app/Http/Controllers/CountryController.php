@@ -16,77 +16,19 @@ class CountryController extends Controller
     public function index()
     {
         $country = new Country;
-        $country->setOECDData();
-        $GIOdata = $country->getDataForGIOjs($country);
+        $country->setOECDData("JP");
+        $countrylist = $country->getOECDCountryList();
+        $GIOdata = $country->getDataForGIOjs($country, "JP");
 
-        Log::debug($GIOdata);
-
-        return view('world', ['data' => $GIOdata]);
+        return view('world', ['data' => $GIOdata, 'country_list' => $countrylist]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function getJsonData(Request $request, $c_id)
     {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Country  $country
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Country $country)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Country  $country
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Country $country)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Country  $country
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Country $country)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Country  $country
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Country $country)
-    {
-        //
+        $country = new Country;
+        $country->setOECDData($c_id);
+        $GIOdata = $country->getDataForGIOjs($country, $c_id);
+        
+        return response()->json($GIOdata);
     }
 }

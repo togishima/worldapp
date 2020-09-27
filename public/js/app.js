@@ -72786,26 +72786,28 @@ var controller = new GIO.Controller(container, configs);
 controller.setInitCountry("JP");
 controller.addData(data);
 controller.init();
+/*
 controller.onCountryPicked(callback);
-
 function callback(selectedCountry) {
+
   $.ajax({
-    url: "/json/".concat(selectedCountry.ISOCode),
+    url: `/json/${selectedCountry.ISOCode}`,
     type: 'GET',
     dataType: 'json'
   }).done(function (results) {
     controller.addData(results);
-    controller.switchCountry(countryCode); //controller.init();
+    controller.switchCountry(countryCode);
+    //controller.init();
   }).fail(function (jqHXR, textStatus, errorThrown) {
     alert('ファイルの取得に失敗しました。');
-    console.log("ajax通信に失敗しました");
+    console.log("ajax通信に失敗しました")
     console.log(jqXHR.status);
     console.log(textStatus);
     console.log(errorThrown.message);
   });
-}
+};
+*/
 
-;
 $('[name=country_selector]').on('change', function () {
   var countryCode = $(this).val();
   $.ajax({

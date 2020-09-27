@@ -4,8 +4,8 @@ require('./bootstrap');
 window.three = require('three');
 window.GIO = require('giojs');
 
-var container = document.getElementById("globalArea");
-var configs = {
+const container = document.getElementById("globalArea");
+const configs = {
   "control": {
     "stats": false,
     "disableUnmentioned": false,
@@ -14,8 +14,8 @@ var configs = {
     "outOnly": false,
     "initCountry": "CN",
     "halo": true,
-    "transparentBackground": false,
-    "autoRotation": false,
+    "transparentBackground": true,
+    "autoRotation": true,
     "rotationRatio": 1
   },
   "color": {
@@ -32,9 +32,71 @@ var configs = {
     "related": 0.5
   }
 }
-var controller = new GIO.Controller(container, configs);
+const controller = new GIO.Controller(container, configs);
 
 controller.setInitCountry("JP");
 controller.addData(data);
 controller.init();
+/*
+controller.onCountryPicked(callback);
+function callback(selectedCountry) {
 
+  $.ajax({
+    url: `/json/${selectedCountry.ISOCode}`,
+    type: 'GET',
+    dataType: 'json'
+  }).done(function (results) {
+    controller.addData(results);
+    controller.switchCountry(countryCode);
+    //controller.init();
+  }).fail(function (jqHXR, textStatus, errorThrown) {
+    alert('ファイルの取得に失敗しました。');
+    console.log("ajax通信に失敗しました")
+    console.log(jqXHR.status);
+    console.log(textStatus);
+    console.log(errorThrown.message);
+  });
+};
+*/
+
+$('[name=country_selector]').on('change', function () {
+  var countryCode = $(this).val();
+  $.ajax({
+    url: `/json/${countryCode}`,
+    type: 'GET',
+    dataType: 'json'
+  }).done(function (results) {
+    controller.clearData();
+    controller.addData(results);
+    controller.switchCountry(countryCode);
+    //controller.init();
+  }).fail(function (jqHXR, textStatus, errorThrown) {
+    alert('ファイルの取得に失敗しました。');
+    console.log("ajax通信に失敗しました")
+    console.log(jqXHR.status);
+    console.log(textStatus);
+    console.log(errorThrown.message);
+  });
+});
+
+/*
+$('[name=country_selector]').on('change', function () {
+  var countryCode = $(this).val;
+
+  $.ajax({
+    url: `/json/${countryCode}`,
+    type: 'GET',
+    dataType: 'json'
+  }).done(function (results) {
+    controller.clearData();
+    controller.addData(results);
+    //controller.init();
+  }).fail(function (jqHXR, textStatus, errorThrown) {
+    alert('ファイルの取得に失敗しました。');
+    console.log("ajax通信に失敗しました")
+    console.log(jqXHR.status);
+    console.log(textStatus);
+    console.log(errorThrown.message);
+  });
+});
+*/

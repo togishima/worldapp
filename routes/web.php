@@ -14,3 +14,4 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', 'CountryController@index');
+Route::get('/json/{c_id}', 'CountryController@getJsonData');

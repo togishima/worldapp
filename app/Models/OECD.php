@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Throwable;
 use Log;
 
 class OECD {
@@ -40,7 +41,7 @@ class OECD {
     }
 
     //APIクエリ用パラメーターの作成
-    function getQueryParam($country,$datatype) {
+    function getQueryParam($country , $datatype, $year) {
         $countryList = $this->countries;
         $query = [];
         $query[] = 'https://stats.oecd.org/SDMX-JSON/data/MIG/';
@@ -59,7 +60,7 @@ class OECD {
         //クエリの対象国を絞った場合の処理
         } elseif (array_key_exists($country, $countryList)) {
             $query[] = $countryList[$country] . '.';
-        } 
+        }
 
         //B11 = 各国から対象国への移住数、B12=対象の国から他国への移住数、TOT＝合計
         if($datatype == "inbound") {
@@ -80,7 +81,7 @@ class OECD {
             }
         }
         //2012年以降のデータを取得
-        $query[] = '/OECD?startTime=2012';
+        $query[] = '/OECD?startTime=' . $year . '&endTime=2017';
 
         return implode("", $query);
     }
@@ -130,7 +131,14 @@ class OECD {
     
     function getOutBoundData($country, $year) {
         //datasetsを取り出す
-        $url = self::getQUeryParam($country, 'outbound');
+        $url = self::getQUeryParam($country, 'outbound', $year);
+
+        $headers=get_headers($url);
+        $result = stripos($headers[0],"200 OK")?true:false;
+        if($result == false) {
+            return false;
+        }
+
         $json = file_get_contents($url);
         $data = json_decode($json, true);
         //Log::debug($data);
@@ -150,7 +158,15 @@ class OECD {
 
     function getInBoundData($country, $year) {
         //datasetsを取り出す
-        $url = self::getQUeryParam($country, 'inbound');
+        $url = self::getQUeryParam($country, 'inbound', $year);
+
+        //クエリが可能かどうか判断
+        $headers=get_headers($url);
+        $result = stripos($headers[0],"200 OK")?true:false;
+        if($result == false) {
+            return false;
+        }
+
         $json = file_get_contents($url);
         $data = json_decode($json, true);
 
