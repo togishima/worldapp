@@ -18,17 +18,18 @@ class Country extends Model
         $oecd = new OECD;
         $oecdTmpList = $oecd->getOECDCountries();
         $failed_list = ["AR", "BG", "CR", "GR","RU", "SA", "SK","ZA"];
-        $this->oecdCountryList = self::from('country_code')->whereIn('Code', $oecdTmpList)->whereNotIn('Code2', $failed_list)->get();
+        $this->oecdCountryList = self::from('country_code')
+        ->whereIn('Code', $oecdTmpList)
+        ->whereNotIn('Code2', $failed_list)
+        ->get();
         
         //日本から各国への移民データを取得
         $c_name = self::findCountryName($c_id);
-        $this->dataOut = $oecd->getOutBoundData($c_name, 2015);
-        $this->dataIn = $oecd->getInBoundData($c_name, 2015);
+        $this->dataOut = $oecd->getOutBoundData($c_name, 2013);
+        $this->dataIn = $oecd->getInBoundData($c_name, 2013);
     }
 
     function getOECDCountryList() {
-        
-
         return $this->oecdCountryList;
     }
 
@@ -52,17 +53,17 @@ class Country extends Model
     public function getDataForGIOjs($country, $countryCode) {
         $gdata = [];
         $gdata['dataSetKeys'] = [];
-        $gdata['initDataSet'] = "key1";
+        $gdata['initDataSet'] = 2013;
 
         //Outboundデータの処理
-        $count= 1;
+        $year= 2013;
         if(isset($country->dataOut)) {
             foreach($country->dataOut as $year => $array) {
-                if(array_key_exists('key'. $count, $gdata['dataSetKeys']) == false) {
-                    array_push($gdata['dataSetKeys'], "key".$count);
+                if(array_key_exists($year, $gdata['dataSetKeys']) == false) {
+                    array_push($gdata['dataSetKeys'], $year);
                 }
                 //キー（年度）毎に配列を作成
-                $gdata["key".$count] = [];
+                $gdata[$year] = [];
 
                 foreach($array as $c_code => $mig_value) {
                     $tmp = [];
@@ -72,18 +73,15 @@ class Country extends Model
                         "i" => $i,
                         "v" => ($mig_value * 1000)
                     ];
-                    array_push($gdata["key".$count], $tmp);
+                    array_push($gdata[$year], $tmp);
                 }
-                $count++;          
+                $year++;          
             }
         }
-        $count = 1;
+        $year = 2013;
         //inboundデータの処理
         if(isset($country->dataIn)) {
             foreach($country->dataIn as $year => $array) {
-                if(array_key_exists('key'.$count, $gdata['dataSetKeys']) == false) {
-                    array_push($gdata['dataSetKeys'], "key".$count);
-                }
                 foreach($array as $c_code => $mig_value) {
                     $tmp = [];
                     $i = $country->findCountryCode2($c_code);
@@ -95,9 +93,9 @@ class Country extends Model
                         "i" => $countryCode,
                         "v" => ($mig_value * 1000)
                     ];
-                    array_push($gdata["key".$count], $tmp);
+                    array_push($gdata[$year], $tmp);
                 }
-                $count++;
+                $year++;
             }
         }
         return $gdata;

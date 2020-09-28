@@ -25,14 +25,18 @@
         background: rgba(0, 0, 0, 0.6);
         color: White;
       }
-      .country-selector-wrap {
+      .selector-wrap {
         position: absolute;
-        bottom: 1em;
-        right: 0;
-        margin-right: 2em;
+        bottom: 1.5em;
+        right: 2em;
+        display: flex;
+        flex-direction: column;
         color: #fff;
       }
-      .country-selector {
+      .selector-label {
+        align-self: center;
+      }
+      .selector {
         border-radius: 4px;
         font-size: 1.5em;
         background: #707070
@@ -49,9 +53,15 @@
   <body>
     <h1 class="title">Visualization of International Migration</h1>
     <div id="globalArea" class="globe"></div>
-    <div class="country-selector-wrap">
-      <label for="country-selector">Change Country Data：</label>
-      <select id="country_selector" class="country-selector" name="country_selector">
+    <div class="selector-wrap">
+      <label for="year-selector" class="selector-label">Change Data Year:</label>
+      <select name="year_selector" id="year_selector" class="selector">
+        @foreach ($data['dataSetKeys'] as $data)
+        <option value="{{$data}}">{{$data}}</option>
+        @endforeach
+      </select>
+      <label class="selector-label" for="country-selector">Change Country Data：</label>
+      <select id="country_selector" class="selector" name="country_selector">
       @foreach($country_list as $country)
       <option name="{{$country->Name}}" value="{{$country->Code2}}" @if($country->Name == "Japan") selected @endif>{{$country->Name}}</option>
       @endforeach

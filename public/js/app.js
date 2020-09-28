@@ -72758,8 +72758,8 @@ var container = document.getElementById("globalArea");
 var configs = {
   "control": {
     "stats": false,
-    "disableUnmentioned": false,
-    "lightenMentioned": false,
+    "disableUnmentioned": true,
+    "lightenMentioned": true,
     "inOnly": false,
     "outOnly": false,
     "initCountry": "CN",
@@ -72778,7 +72778,7 @@ var configs = {
   },
   "brightness": {
     "ocean": 0,
-    "mentioned": 0,
+    "mentioned": 0.5,
     "related": 0.5
   }
 };
@@ -72808,6 +72808,11 @@ function callback(selectedCountry) {
 };
 */
 
+$('[name=year_selector').on('change', function () {
+  var year = $(this).val();
+  controller.switchDataSet(year);
+  console.log("datasetChanged, current data set is ".concat(year));
+});
 $('[name=country_selector]').on('change', function () {
   var countryCode = $(this).val();
   $.ajax({
