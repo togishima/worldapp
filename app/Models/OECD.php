@@ -36,7 +36,7 @@ class OECD {
         $this->countries = $countries;
     }
 
-    public function getOECDCountries() {
+    function getOECDCountries() {
         return $this->countries;
     }
 
@@ -141,7 +141,6 @@ class OECD {
 
         $json = file_get_contents($url);
         $data = json_decode($json, true);
-        //Log::debug($data);
 
         //dataSetsからobservationsの値を取り出す
         $tmp = self::extractData($data['dataSets']);

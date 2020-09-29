@@ -72786,28 +72786,33 @@ var controller = new GIO.Controller(container, configs);
 controller.setInitCountry("JP");
 controller.addData(data);
 controller.init();
-/*
 controller.onCountryPicked(callback);
-function callback(selectedCountry) {
 
+function callback(selectedCountry) {
+  var countryCode = selectedCountry.ISOCode;
   $.ajax({
-    url: `/json/${selectedCountry.ISOCode}`,
+    url: "/data/".concat(countryCode),
     type: 'GET',
     dataType: 'json'
   }).done(function (results) {
-    controller.addData(results);
     controller.switchCountry(countryCode);
-    //controller.init();
+    newInfo = results[0];
+    console.log(newInfo);
+    document.getElementById("c-name").innerHTML = newInfo.Country_Name;
+    document.getElementById("govt-form").innerHTML = newInfo.GovernmentForm;
+    document.getElementById("c-pop").innerHTML = newInfo.Population / 1000000 + "M";
+    document.getElementById("c-gnp").innerHTML = newInfo.GNP;
+    document.getElementById("c-cap").innerHTML = newInfo.Capital;
   }).fail(function (jqHXR, textStatus, errorThrown) {
     alert('ファイルの取得に失敗しました。');
-    console.log("ajax通信に失敗しました")
+    console.log("ajax通信に失敗しました");
     console.log(jqXHR.status);
     console.log(textStatus);
     console.log(errorThrown.message);
   });
-};
-*/
+}
 
+;
 $('[name=year_selector').on('change', function () {
   var year = $(this).val();
   controller.switchDataSet(year);
@@ -72822,7 +72827,9 @@ $('[name=country_selector]').on('change', function () {
   }).done(function (results) {
     controller.clearData();
     controller.addData(results);
-    controller.switchCountry(countryCode); //controller.init();
+    controller.switchCountry(countryCode);
+    $('[name=year_selector').val(2013);
+    updateCountryInfo(countryCode); //controller.init();
   }).fail(function (jqHXR, textStatus, errorThrown) {
     alert('ファイルの取得に失敗しました。');
     console.log("ajax通信に失敗しました");
@@ -72831,6 +72838,24 @@ $('[name=country_selector]').on('change', function () {
     console.log(errorThrown.message);
   });
 });
+
+function updateCountryInfo(countryCode) {
+  $.ajax({
+    url: "/data/".concat(countryCode),
+    type: 'GET',
+    dataType: 'json'
+  }).done(function (results) {
+    newInfo = results[0];
+    console.log(newInfo);
+    document.getElementById("c-name").innerHTML = newInfo.Country_Name;
+    document.getElementById("govt-form").innerHTML = newInfo.GovernmentForm;
+    document.getElementById("c-pop").innerHTML = newInfo.Population / 1000000 + "M";
+    document.getElementById("c-gnp").innerHTML = newInfo.GNP;
+    document.getElementById("c-cap").innerHTML = newInfo.Capital;
+  });
+}
+
+;
 /*
 $('[name=country_selector]').on('change', function () {
   var countryCode = $(this).val;

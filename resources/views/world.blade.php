@@ -42,30 +42,51 @@
         background: #707070
       }
 
+      .country-info-wrap {
+        position: absolute;
+        bottom: 1.5em;
+        left: 2em;
+        padding: 0.5em 1em;
+        color: #fff;
+        background: rgba(112, 112, 112, 0.3);
+      }
+
     </style>
     <script src="{{ asset('js/app.js') }}" defer></script>
     <script type="text/javascript" src="{{ asset('js/jquery-3.5.1.min.js') }}"></script>
     <script>
-      let data = @json($data); 
-      console.log(data);
+      let data = @json($data);
     </script>
   </head>
   <body>
     <h1 class="title">Visualization of International Migration</h1>
+    
     <div id="globalArea" class="globe"></div>
+    
+    <div class="country-info-wrap">
+      <h2>Country Information</h2>
+      {!! $countryInfo !!}
+    </div>
+
     <div class="selector-wrap">
+
       <label for="year-selector" class="selector-label">Change Data Year:</label>
       <select name="year_selector" id="year_selector" class="selector">
         @foreach ($data['dataSetKeys'] as $data)
         <option value="{{$data}}">{{$data}}</option>
         @endforeach
       </select>
+
       <label class="selector-label" for="country-selector">Change Country Data：</label>
       <select id="country_selector" class="selector" name="country_selector">
-      @foreach($country_list as $country)
-      <option name="{{$country->Name}}" value="{{$country->Code2}}" @if($country->Name == "Japan") selected @endif>{{$country->Name}}</option>
-      @endforeach
-    </select>
+        @foreach($countryList as $country)
+        <option name="{{$country->Name}}" value="{{$country->Code2}}" @if($country->Name == "Japan") selected @endif>{{$country->Name}}</option>
+        @endforeach
+      </select>
     </div>
+
+    <script>
+      
+    </script>
   </body>
 </html>

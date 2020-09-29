@@ -18,17 +18,28 @@ class CountryController extends Controller
         $country = new Country;
         $country->setOECDData("JP");
         $countrylist = $country->getOECDCountryList();
-        $GIOdata = $country->getDataForGIOjs($country, "JP");
 
-        return view('world', ['data' => $GIOdata, 'country_list' => $countrylist]);
+        $initCountry = "JP";
+        $GIOdata = $country->getDataForGIOjs($country, $initCountry);
+        $countryInfo = $country->countryInfo($initCountry);
+
+        return view('world', ['data' => $GIOdata, 'countryList' => $countrylist, 'countryInfo'=>$countryInfo]);
     }
 
     public function getJsonData(Request $request, $c_id)
     {
-        $country = new Country;
+        $country = Country::firstOrNew();
         $country->setOECDData($c_id);
         $GIOdata = $country->getDataForGIOjs($country, $c_id);
         
         return response()->json($GIOdata);
+    }
+    
+    public function getCountryInfo(Request $request, $c_id) {
+        $country = Country::firstOrNew();
+        $country->setOECDData($c_id);
+        $countryInfo = $country->from('country_info')->where('Code2', $c_id)->get();
+        
+        return json_encode($countryInfo);
     }
 }
