@@ -8,6 +8,11 @@ use Log;
 class Country extends Model
 {
     protected $table = "country";
+
+    function getCountryCodes() {
+        return self::select('Code')->get();
+    }
+    /*
     protected $countryInfo;
     protected $oecdCountryList;
     protected $dataIn;
@@ -125,4 +130,5 @@ class Country extends Model
 
         return implode("", $dl);
     }
+    */
 }
