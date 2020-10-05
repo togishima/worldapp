@@ -68,14 +68,7 @@
       {!! $countryInfo !!}
     </div>
 
-    <div class="selector-wrap">
-
-      <label for="year-selector" class="selector-label">Change Data Year:</label>
-      <select name="year_selector" id="year_selector" class="selector">
-        @foreach ($data['dataSetKeys'] as $data)
-        <option value="{{$data}}">{{$data}}</option>
-        @endforeach
-      </select>
+    <div class="selector-wrap">     
 
       <label class="selector-label" for="country-selector">Change Country Data：</label>
       <select id="country_selector" class="selector" name="country_selector">

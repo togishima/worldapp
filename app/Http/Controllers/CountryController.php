@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Country;
+use App\CountryView;
 use Illuminate\Http\Request;
 use Log;
 
@@ -15,13 +16,13 @@ class CountryController extends Controller
      */
     public function index()
     {
-        $country = new Country;
-        $country->setOECDData("JP");
-        $countrylist = $country->getOECDCountryList();
-
+        $view = new CountryView;
+        $country = Country::firstOrNew();
         $initCountry = "JP";
-        $GIOdata = $country->getDataForGIOjs($country, $initCountry);
-        $countryInfo = $country->countryInfo($initCountry);
+
+        $GIOdata = $view->getGIOData($initCountry);
+        $countrylist = $view->getCountryList();
+        $countryInfo = $country->getCountryInfo($initCountry);
 
         return view('world', ['data' => $GIOdata, 'countryList' => $countrylist, 'countryInfo'=>$countryInfo]);
     }
@@ -30,14 +31,13 @@ class CountryController extends Controller
     {
         $country = Country::firstOrNew();
         $country->setOECDData($c_id);
-        $GIOdata = $country->getDataForGIOjs($country, $c_id);
+        $GIOdata = $view->getGIOData($c_id);
         
         return response()->json($GIOdata);
     }
     
     public function getCountryInfo(Request $request, $c_id) {
         $country = Country::firstOrNew();
-        $country->setOECDData($c_id);
         $countryInfo = $country->from('country_info')->where('Code2', $c_id)->get();
         
         return json_encode($countryInfo);

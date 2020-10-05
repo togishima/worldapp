@@ -9,9 +9,45 @@ class Country extends Model
 {
     protected $table = "country";
 
-    function getCountryCodes() {
-        return self::select('Code')->get();
+    function getMIGData($COU, $year) {
+        try {
+            $data = self::select('Nationality', 'Destination', 'Value')
+                ->from('oecd_data')
+                ->where('Destination', $COU)
+                ->where('Year', $year)
+                ->where('Value', ">", 0)
+                ->get();
+
+            return $data;
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
+
+    public function getCountryInfo($c_id) {
+        $countryInfo = self::from('country_info')->where('Code2', $c_id)->get();
+        Log::debug($countryInfo);
+
+        $classTerm = 'class="country-info--term';
+        $classDef = 'class="country-info--def';
+
+        $dl = [];
+        $dl[] = '<dl "class=country-info">';
+        $dl[] = '<dt ' . $classTerm . '">Country Name:</dt>';
+        $dl[] = '<dd id="c-name"' . $classDef . '">' . $countryInfo[0]->Country_Name .'</dd>';
+        $dl[] = '<dt ' . $classTerm . '">Government Form:</dt>';
+        $dl[] = '<dd id="govt-form"' . $classDef . '">' . $countryInfo[0]->GovernmentForm .'</dd>';
+        $dl[] = '<dt ' . $classTerm . '">Popolation:</dt>';
+        $dl[] = '<dd id="c-pop"' . $classDef . '">' . ($countryInfo[0]->Population / 1000000) .'M</dd>';
+        $dl[] = '<dt ' . $classTerm . '">GNP:</dt>';
+        $dl[] = '<dd id="c-gnp"' . $classDef . '">' . $countryInfo[0]->GNP .'</dd>';
+        $dl[] = '<dt ' . $classTerm . '">Capital City:</dt>';
+        $dl[] = '<dd id="c-cap"' . $classDef . '">' . $countryInfo[0]->Capital .'</dd>';
+        $dl[] = '</dl>';
+
+        return implode("", $dl);
+    }
+
     /*
     protected $countryInfo;
     protected $oecdCountryList;
@@ -107,28 +143,6 @@ class Country extends Model
         return $gdata;
     }
 
-    public function countryInfo($c_id) {
-        $countryInfo = self::from('country_info')->where('Code2', $c_id)->get();
-        Log::debug($countryInfo);
-
-        $classTerm = 'class="country-info--term';
-        $classDef = 'class="country-info--def';
-
-        $dl = [];
-        $dl[] = '<dl "class=country-info">';
-        $dl[] = '<dt ' . $classTerm . '">Country Name:</dt>';
-        $dl[] = '<dd id="c-name"' . $classDef . '">' . $countryInfo[0]->Country_Name .'</dd>';
-        $dl[] = '<dt ' . $classTerm . '">Government Form:</dt>';
-        $dl[] = '<dd id="govt-form"' . $classDef . '">' . $countryInfo[0]->GovernmentForm .'</dd>';
-        $dl[] = '<dt ' . $classTerm . '">Popolation:</dt>';
-        $dl[] = '<dd id="c-pop"' . $classDef . '">' . ($countryInfo[0]->Population / 1000000) .'M</dd>';
-        $dl[] = '<dt ' . $classTerm . '">GNP:</dt>';
-        $dl[] = '<dd id="c-gnp"' . $classDef . '">' . $countryInfo[0]->GNP .'</dd>';
-        $dl[] = '<dt ' . $classTerm . '">Capital City:</dt>';
-        $dl[] = '<dd id="c-cap"' . $classDef . '">' . $countryInfo[0]->Capital .'</dd>';
-        $dl[] = '</dl>';
-
-        return implode("", $dl);
-    }
+    
     */
 }

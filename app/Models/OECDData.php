@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Models;
+namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
 class OECDData extends Model
 {
     protected $table = "oecd_data";
-    protected $from;
-    protected $to;
-    protected $value;
-    protected $year;
+    protected $Destination;
+    protected $Nationality;
+    protected $Value;
+    protected $Year;
 }
