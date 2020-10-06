@@ -72771,8 +72771,8 @@ var configs = {
   "color": {
     "surface": 1749093,
     "selected": 1827421,
-    "in": 5111795,
-    "out": 14831145,
+    "in": 2715903,
+    "out": 14867488,
     "halo": 9895823,
     "background": 0
   },
@@ -72796,13 +72796,7 @@ function callback(selectedCountry) {
     dataType: 'json'
   }).done(function (results) {
     controller.switchCountry(countryCode);
-    newInfo = results[0];
-    console.log(newInfo);
-    document.getElementById("c-name").innerHTML = newInfo.Country_Name;
-    document.getElementById("govt-form").innerHTML = newInfo.GovernmentForm;
-    document.getElementById("c-pop").innerHTML = newInfo.Population / 1000000 + "M";
-    document.getElementById("c-gnp").innerHTML = newInfo.GNP;
-    document.getElementById("c-cap").innerHTML = newInfo.Capital;
+    updateCountryInfo(countryCode);
   }).fail(function (jqHXR, textStatus, errorThrown) {
     alert('ファイルの取得に失敗しました。');
     console.log("ajax通信に失敗しました");
@@ -72820,23 +72814,8 @@ $('[name=year_selector').on('change', function () {
 });
 $('[name=country_selector]').on('change', function () {
   var countryCode = $(this).val();
-  $.ajax({
-    url: "/json/".concat(countryCode),
-    type: 'GET',
-    dataType: 'json'
-  }).done(function (results) {
-    controller.clearData();
-    controller.addData(results);
-    controller.switchCountry(countryCode);
-    $('[name=year_selector').val(2013);
-    updateCountryInfo(countryCode); //controller.init();
-  }).fail(function (jqHXR, textStatus, errorThrown) {
-    alert('ファイルの取得に失敗しました。');
-    console.log("ajax通信に失敗しました");
-    console.log(jqXHR.status);
-    console.log(textStatus);
-    console.log(errorThrown.message);
-  });
+  controller.switchCountry(countryCode);
+  updateCountryInfo(countryCode);
 });
 
 function updateCountryInfo(countryCode) {

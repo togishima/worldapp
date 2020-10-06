@@ -26,7 +26,9 @@ class CountryView
             foreach($data as $obsv) {
                 
                 $e = self::translateCountryCode($obsv->Nationality);
-                $this->countryList[] = $e;
+                if(isset($e)) {
+                    $this->countryList[] = $e;
+                }
                 $i = self::translateCountryCode($obsv->Destination);
                 $v = $obsv->Value;
 
@@ -34,11 +36,11 @@ class CountryView
                     $GIOdata[] = [
                         'e'=> $e, 
                         'i'=> $i, 
-                        'v' => $v
+                        'v' => ($v*1000)
                     ];
                 }
             }
-            Log::debug($GIOdata);
+            //Log::debug($GIOdata);
             return $GIOdata;
         } catch (\Throwable $th) {
             throw $th;
@@ -67,23 +69,24 @@ class CountryView
         
     }
 
+    function getCurrentCodeSet() {
+        return array_unique($this->countryList);
+    }
+
     function getCountryList() {
         try {
-            $country = Country::firstOrNew();
-            $c_list = $country->select('Name')->WhereIn('Code2', $this->countryList);
-
-            $array = [];
-            foreach($c_list as $country) {
-                $array[] = $country->Name;
-            }
-
-            return  $array;
+            $List = Country::select('Name', 'Code2')->whereIn('Code2', array_unique($this->countryList))->get();
+            return $List;
         } catch (\Throwable $th) {
             throw $th;
         }
     }
-
     
+    /*
+
+    try {
+            
+    */
 
     /*
     protected $table = "country_info";
