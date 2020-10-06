@@ -3,38 +3,42 @@
 namespace App;
 
 use App\Models\Country;
+use Illuminate\Support\Facades\DB;
 use Log;
 
 class CountryView
 {
     protected $countryList = [];
+    protected $countryCodes;
+
+    function __construct() {
+        $this->countryCodes = DB::select('select Code, Code2 from country_code');
+    }
 
     function getGIOData($CO) {
         try {
-            $country = Country::firstOrNew();
             //$CO を$COUに変換
             $COU = self::translateCountryCode($CO);
             //MySQLからデータを抽出
-            $data = $country->getMIGData($COU, 2017);
+            $data = Country::getMIGData($COU, 2017);
             //データをGIO.js用に加工
             $GIOdata = [];
             foreach($data as $obsv) {
+                
                 $e = self::translateCountryCode($obsv->Nationality);
-                $i = $CO;
+                $this->countryList[] = $e;
+                $i = self::translateCountryCode($obsv->Destination);
                 $v = $obsv->Value;
-
-                if(isset($e)) {
-                    $this->countryList[] = $e;
-                }
 
                 if(isset($e) && isset($i) && $v) {
                     $GIOdata[] = [
                         'e'=> $e, 
-                        'i'=>$i, 
-                        'v' =>($v*100)
+                        'i'=> $i, 
+                        'v' => $v
                     ];
                 }
             }
+            Log::debug($GIOdata);
             return $GIOdata;
         } catch (\Throwable $th) {
             throw $th;
@@ -43,15 +47,19 @@ class CountryView
 
     function translateCountryCode($code) {
         try {
-            $country = Country::firstOrNew();
             if (strlen($code) == 2) {
-                $COU = $country->select('Code')->from('country_code')->where('Code2', $code)->get();
-                return $COU[0]->Code;
+                 $index = array_search($code, array_column($this->countryCodes, "Code2"));
+
+                 if($index !== false) {
+                     return $this->countryCodes[$index]->Code;
+                 }
+
             } else {
-                $CO = $country->select('Code2')->from('country_code')->where('Code', $code)->get();
-                if(isset($CO[0])) {
-                    return $CO[0]->Code2;
-                }
+                $index = array_search($code, array_column($this->countryCodes, "Code"));
+
+                 if($index !== false) {
+                     return $this->countryCodes[$index]->Code2;
+                 }
             }
         } catch (\Throwable $th) {
             throw $th;
@@ -74,6 +82,8 @@ class CountryView
             throw $th;
         }
     }
+
+    
 
     /*
     protected $table = "country_info";

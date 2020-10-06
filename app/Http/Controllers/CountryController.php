@@ -17,20 +17,17 @@ class CountryController extends Controller
     public function index()
     {
         $view = new CountryView;
-        $country = Country::firstOrNew();
         $initCountry = "JP";
-
         $GIOdata = $view->getGIOData($initCountry);
         $countrylist = $view->getCountryList();
-        $countryInfo = $country->getCountryInfo($initCountry);
+        $countryInfo = Country::getCountryInfo($initCountry);
 
-        return view('world', ['data' => $GIOdata, 'countryList' => $countrylist, 'countryInfo'=>$countryInfo]);
+        return view('world', ['data'=> $GIOdata, 'countryList' => $countrylist, 'countryInfo'=>$countryInfo]);
     }
 
     public function getJsonData(Request $request, $c_id)
     {
-        $country = Country::firstOrNew();
-        $country->setOECDData($c_id);
+        $view = new CountryView;
         $GIOdata = $view->getGIOData($c_id);
         
         return response()->json($GIOdata);
