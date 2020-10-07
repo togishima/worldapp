@@ -72765,8 +72765,8 @@ var configs = {
     "initCountry": "CN",
     "halo": true,
     "transparentBackground": true,
-    "autoRotation": false,
-    "rotationRatio": 1
+    "autoRotation": true,
+    "rotationRatio": 0.7
   },
   "color": {
     "surface": 1749093,
