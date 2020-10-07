@@ -13,28 +13,29 @@ class CountryView
     protected $countryCodes;
 
     function __construct() {
-        //CodeとCode2の翻訳用のリストを作成
+        //国コード変換用のリストを作成
         $this->countryCodes = DB::select('select Code, Code2 from country_code');
     }
 
-    //データベースからデータを引き出して加工
+    /**
+     * @param 国コード（2文字）
+     * @return $GIOdata
+     */
     function getGIOData($CO) {
         try {
             //$CO を$COUに変換
             $COU = self::translateCountryCode($CO);
             //MySQLからデータを抽出
             $data = OECDData::getMIGData($COU, 2017);
-            //データをGIO.js用に加工
+            //データをGIO.js用に加工して返す
             $GIOdata = [];
             foreach($data as $obsv) {
-                
                 $e = self::translateCountryCode($obsv->Nationality);
                 if(isset($e)) {
                     $this->countryList[] = $e;
                 }
                 $i = self::translateCountryCode($obsv->Destination);
                 $v = $obsv->Value;
-
                 if(isset($e) && isset($i) && $v) {
                     $GIOdata[] = [
                         'e'=> $e, 
@@ -48,7 +49,7 @@ class CountryView
             throw $th;
         }
     }
-
+    
     /**
      * @param 国コード（2文字 or 3文字）
      * @return 国コード2文字⇒3文字、3文字⇒2文字
@@ -60,7 +61,6 @@ class CountryView
                 if($index !== false) {
                     return $this->countryCodes[$index]->Code;
                 }
-
             } else {
                 $index = array_search($code, array_column($this->countryCodes, "Code"));
                 if($index !== false) {
@@ -73,7 +73,7 @@ class CountryView
     }
 
     /**
-     * @return 最後にデータを取得した際に作成したリストを取得
+     * @return 最後にデータを取得した際に作成したリスト
      */
     function getCountryList() {
         try {

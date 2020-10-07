@@ -22,21 +22,23 @@ class CountryController extends Controller
         $countrylist = $view->getCountryList();
         $countryInfo = Country::getCountryInfo($initCountry);
 
-        return view('world', ['data'=> $GIOdata, 'countryList' => $countrylist, 'countryInfo'=>$countryInfo]);
+        return view('world', [
+            'data'=> $GIOdata, 
+            'countryList' => $countrylist, 
+            'countryInfo'=>$countryInfo
+            ]);
     }
 
     public function getJsonData(Request $request, $c_id)
     {
-        $view = new CountryView;
+        $view = CountryView::fistOrNew();
         $GIOdata = $view->getGIOData($c_id);
         
         return response()->json($GIOdata);
     }
     
     public function getCountryInfo(Request $request, $c_id) {
-        $country = Country::firstOrNew();
-        $countryInfo = $country->from('country_info')->where('Code2', $c_id)->get();
-        
+        $countryInfo = Country::getCountryInfo($c_id);
         return json_encode($countryInfo);
     }
 }
