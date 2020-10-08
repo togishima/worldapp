@@ -16,28 +16,29 @@ class CountryController extends Controller
      */
     public function index()
     {
-        $view = new CountryView;
         $initCountry = "JP";
+        $view = new CountryView;
         $GIOdata = $view->getGIOData($initCountry);
         $countrylist = $view->getCountryList();
-        $countryInfo = Country::getCountryInfo($initCountry);
+        $countryInfoDOM = Country::getCountryInfoDOM($initCountry);
 
         return view('world', [
-            'data'=> $GIOdata, 
-            'countryList' => $countrylist, 
-            'countryInfo'=>$countryInfo
-            ]);
+            'data' => $GIOdata,
+            'countryList' => $countrylist,
+            'countryInfoDOM' => $countryInfoDOM
+        ]);
     }
 
     public function getJsonData(Request $request, $c_id)
     {
-        $view = CountryView::fistOrNew();
+        $view = new CountryView;
         $GIOdata = $view->getGIOData($c_id);
-        
+
         return response()->json($GIOdata);
     }
-    
-    public function getCountryInfo(Request $request, $c_id) {
+
+    public function getCountryInfo(Request $request, $c_id)
+    {
         $countryInfo = Country::getCountryInfo($c_id);
         return json_encode($countryInfo);
     }

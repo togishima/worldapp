@@ -9,7 +9,7 @@ class Country extends Model
 {
     protected $table = "country";
 
-    public static function getCountryInfo($c_id) {
+    public static function getCountryInfoDOM($c_id) {
         try {
             $countryInfo = self::from('country_info')->where('Code2', $c_id)->get();
 
@@ -17,7 +17,7 @@ class Country extends Model
             $classDef = 'class="country-info--def';
 
             $dl = [];
-            $dl[] = '<dl "class=country-info">';
+            $dl[] = '<dl class="country-info">';
             $dl[] = '<dt ' . $classTerm . '">Country Name:</dt>';
             $dl[] = '<dd id="c-name"' . $classDef . '">' . $countryInfo[0]->Country_Name .'</dd>';
             $dl[] = '<dt ' . $classTerm . '">Government Form:</dt>';
@@ -36,4 +36,7 @@ class Country extends Model
         }
         
     }
+    public static function getCountryInfo($c_id) {
+        return $countryInfo = self::from('country_info')->where('Code2', $c_id)->get();
+    } 
 }

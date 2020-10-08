@@ -37,8 +37,8 @@ const controller = new GIO.Controller(container, configs);
 controller.setInitCountry("JP");
 controller.addData(data);
 controller.init();
-
 controller.onCountryPicked(callback);
+
 function callback(selectedCountry) {
   let countryCode = selectedCountry.ISOCode;
   $.ajax({
@@ -46,8 +46,13 @@ function callback(selectedCountry) {
     type: 'GET',
     dataType: 'json'
   }).done(function (results) {
-    controller.switchCountry(countryCode);
-    updateCountryInfo(countryCode);
+    newInfo = results;
+    console.log(newInfo);
+    document.getElementById("c-name").innerHTML = newInfo.Country_Name;
+    document.getElementById("govt-form").innerHTML = newInfo.GovernmentForm;
+    document.getElementById("c-pop").innerHTML = (newInfo.Population / 1000000) + "M";
+    document.getElementById("c-gnp").innerHTML = newInfo.GNP;
+    document.getElementById("c-cap").innerHTML = newInfo.Capital;
   }).fail(function (jqHXR, textStatus, errorThrown) {
     alert('ファイルの取得に失敗しました。');
     console.log("ajax通信に失敗しました")

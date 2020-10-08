@@ -65,11 +65,10 @@
     
     <div class="country-info-wrap">
       <h2>Country Information</h2>
-      {!! $countryInfo !!}
+      {!! $countryInfoDOM !!}
     </div>
 
-    <div class="selector-wrap">     
-
+    <div class="selector-wrap">
       <label class="selector-label" for="country-selector">Change Country Data：</label>
       <select id="country_selector" class="selector" name="country_selector">
         @foreach($countryList as $country)

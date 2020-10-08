@@ -12,7 +12,8 @@ class CountryView
     protected $countryList = [];
     protected $countryCodes;
 
-    function __construct() {
+    function __construct()
+    {
         //国コード変換用のリストを作成
         $this->countryCodes = DB::select('select Code, Code2 from country_code');
     }
@@ -21,7 +22,8 @@ class CountryView
      * @param 国コード（2文字）
      * @return $GIOdata
      */
-    function getGIOData($CO) {
+    function getGIOData($CO)
+    {
         try {
             //$CO を$COUに変換
             $COU = self::translateCountryCode($CO);
@@ -29,18 +31,18 @@ class CountryView
             $data = OECDData::getMIGData($COU, 2017);
             //データをGIO.js用に加工して返す
             $GIOdata = [];
-            foreach($data as $obsv) {
+            foreach ($data as $obsv) {
                 $e = self::translateCountryCode($obsv->Nationality);
-                if(isset($e)) {
+                if (isset($e)) {
                     $this->countryList[] = $e;
                 }
                 $i = self::translateCountryCode($obsv->Destination);
                 $v = $obsv->Value;
-                if(isset($e) && isset($i) && $v) {
+                if (isset($e) && isset($i) && $v) {
                     $GIOdata[] = [
-                        'e'=> $e, 
-                        'i'=> $i, 
-                        'v' => ($v*1000)
+                        'e' => $e,
+                        'i' => $i,
+                        'v' => ($v * 1000)
                     ];
                 }
             }
@@ -49,21 +51,22 @@ class CountryView
             throw $th;
         }
     }
-    
+
     /**
      * @param 国コード（2文字 or 3文字）
      * @return 国コード2文字⇒3文字、3文字⇒2文字
      */
-    function translateCountryCode($code) {
+    function translateCountryCode($code)
+    {
         try {
             if (strlen($code) == 2) {
                 $index = array_search($code, array_column($this->countryCodes, "Code2"));
-                if($index !== false) {
+                if ($index !== false) {
                     return $this->countryCodes[$index]->Code;
                 }
             } else {
                 $index = array_search($code, array_column($this->countryCodes, "Code"));
-                if($index !== false) {
+                if ($index !== false) {
                     return $this->countryCodes[$index]->Code2;
                 }
             }
@@ -75,7 +78,8 @@ class CountryView
     /**
      * @return 最後にデータを取得した際に作成したリスト
      */
-    function getCountryList() {
+    function getCountryList()
+    {
         try {
             $List = Country::select('Name', 'Code2')->whereIn('Code2', array_unique($this->countryList))->get();
             return $List;
