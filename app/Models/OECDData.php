@@ -7,12 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class OECDData extends Model
 {
     protected $table = "oecd_data";
+    protected $fillable = [
+        'Destination', 'Nationality', 'Value', 'Year'
+    ];
     protected $Destination;
     protected $Nationality;
     protected $Value;
     protected $Year;
 
-    public static function getMIGData($COU, $year) {
+    public static function getMIGData($COU, $year)
+    {
         try {
             $data = self::select('Nationality', 'Destination', 'Value')
                 ->where('Destination', $COU)

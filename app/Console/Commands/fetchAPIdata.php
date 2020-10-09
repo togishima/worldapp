@@ -13,14 +13,14 @@ class fetchAPIdata extends Command
      *
      * @var string
      */
-    protected $signature = 'command:name';
+    protected $signature = 'command:fetchAPIdata';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'APIデータ取得（テスト用）';
 
     /**
      * Create a new command instance.
@@ -40,19 +40,13 @@ class fetchAPIdata extends Command
     public function handle()
     {
         $oecd = new OECD;
-        $data = $oecd->getInBoundData("JPN", 2012);
-        //各データをOECDDataオブジェクトにマッピングしてMySQLに保存
-        foreach ($data as $c_name => $nat) {
-            $dataModel = new OECDData;
-            $dataModel->Destination = $c_name;
-            foreach ($nat as $nat => $obsv) {
-                $dataModel->Nationality = $nat;
-                foreach ($obsv as $year => $value) {
-                    $dataModel->Value = $value;
-                    $dataModel->Year = $year;
-                    $dataModel->save();
-                }
-            }
+        $countryList = $oecd->getCountryList();
+
+        foreach ($countryList as $country) {
+            $COU = $country['code'];
+            $oecd->fetchAPIDATA($COU);
+
+            echo $country['Name'] . "のデータ更新が完了しました" . "\n";
         }
     }
 }

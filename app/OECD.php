@@ -143,47 +143,34 @@ class OECD
         return $obsvData;
     }
 
-    function fetchAPIData($COU, $startYear)
+    function fetchAPIData($COU)
     {
-        $oecd = new OECD;
-        $data = $oecd->getInBoundData($COU, $startYear);
-        //各データをOECDDataオブジェクトにマッピングしてMySQLに保存
-        foreach ($data as $c_name => $nat) {
-            $dataModel = new OECDData;
-            $dataModel->Destination = $c_name;
-            foreach ($nat as $nat => $obsv) {
-                $dataModel->Nationality = $nat;
-                foreach ($obsv as $year => $value) {
-                    $dataModel->Value = $value;
-                    $dataModel->Year = $year;
-                    $dataModel->save();
+        try {
+            for ($i = 0; $i < 5; $i++) {
+                $year = 2013 + $i;
+                $data = self::getInBoundData($COU, $year);
+                //各データをOECDDataオブジェクトにマッピングしてMySQLに保存
+
+                if (empty($data)) {
+                    continue;
                 }
-            }
-        }
-    }
-
-    function fetchAPIDataAll($startYear)
-    {
-        $oecd = new OECD;
-        $countryList = $oecd->getCountryList();
-
-        foreach ($countryList as $country) {
-            $COU = $country['code'];
-            //マッピング用のデータをAPIから取得
-            $data = $oecd->getInBoundData($COU, $startYear);
-            //各データをOECDDataオブジェクトにマッピングしてMySQLに保存
-            foreach ($data as $c_name => $nat) {
-                $dataModel = new OECDData;
-                $dataModel->Destination = $c_name;
-                foreach ($nat as $nat => $obsv) {
-                    $dataModel->Nationality = $nat;
-                    foreach ($obsv as $year => $value) {
-                        $dataModel->Value = $value;
-                        $dataModel->Year = $year;
+                foreach ($data as $c_name => $obsv) {
+                    if ($c_name == null || $obsv[$year] == null) {
+                        continue;
+                    } else {
+                        $dataModel = OECDData::firstOrNew([
+                            'Destination' => $COU,
+                            "Nationality" => $c_name,
+                            "Year" => $year
+                        ]);
+                        $dataModel->Value = $obsv[$year];
                         $dataModel->save();
                     }
                 }
+                echo "MySQLの" . $COU . "の" . $year . "年データを更新しました" . "\n";
             }
+        } catch (\Throwable $th) {
+            throw $th;
         }
     }
 }
