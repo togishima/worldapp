@@ -2,26 +2,29 @@
 
 namespace App;
 
+use App\Models\OECDData;
 use Throwable;
 use Log;
 
-class OECD {
+class OECD
+{
     protected $countries = [];
     protected $nationalities = [];
     protected $data = [];
 
-    function __construct() {
+    function __construct()
+    {
         try {
             //OECDの移民データベースの構造を取得
             $xml = file_get_contents('https://stats.oecd.org/restsdmx/sdmx.ashx/GetDataStructure/MIG');
             $xml = preg_replace('/(<\/?)\w+:([^>]*>)/', '$1$2', $xml); //get rid of namespaces
             $xmlObject = simplexml_load_string($xml);
             $codeList = $xmlObject->CodeLists->CodeList; //使用可能なコードを取得
-        
+
             //OECD加盟国の一覧を取得
             $countryCodes = json_decode(json_encode($codeList[3]), true);
             $countries = [];
-            foreach($countryCodes['Code'] as $c) {
+            foreach ($countryCodes['Code'] as $c) {
                 $countryName = trim($c['Description'][0]);
                 $countryCode = trim($c['@attributes']['value']);
                 if ($countryCode == "NMEC") {
@@ -35,7 +38,7 @@ class OECD {
             //クエリ可能な国籍一覧を取得
             $countryCodes = json_decode(json_encode($codeList[0]), true);
             $nationalities = [];
-            foreach($countryCodes['Code'] as $c) {
+            foreach ($countryCodes['Code'] as $c) {
                 $countryName = trim($c['Description'][0]);
                 $countryCode = trim($c['@attributes']['value']);
                 if ($countryCode == "NMEC") {
@@ -50,28 +53,30 @@ class OECD {
         }
     }
 
-    function getCountryList() {
+    function getCountryList()
+    {
         return $this->countries;
     }
 
     //APIクエリ用パラメーターの作成
-    function getQueryParam($COU , $year) {
+    function getQueryParam($COU, $year)
+    {
         try {
             $natList = $this->nationalities;
             $targetIndex = array_search($COU, array_column($natList, "code"));
             $targetCOU = $natList[$targetIndex]['code'];
-            
+
             $query = [];
             $query[] = 'https://stats.oecd.org/SDMX-JSON/data/MIG/';
-            
-            foreach($natList as $c ) {
-                if($c['code'] == $targetCOU || strlen($c['code']) >= 4 || $c['code'] == "TOT") {
+
+            foreach ($natList as $c) {
+                if ($c['code'] == $targetCOU || strlen($c['code']) >= 4 || $c['code'] == "TOT") {
                     continue;
                 } else {
                     $query[] = $c['code'];
                 }
 
-                if($c !== end($natList)) {
+                if ($c !== end($natList)) {
                     $query[] = "+";
                 }
             }
@@ -84,14 +89,14 @@ class OECD {
 
             //配列を文字列にして返す
             return implode("", $query);
-
         } catch (\Throwable $e) {
             throw $e;
-        }    
+        }
     }
 
-    //指定した国の流入情報を取得
-    function getInBoundData($COU, $year) {
+    //指定した国の流入情報をAPIから取得
+    function getInBoundData($COU, $year)
+    {
         //datasetsを取り出す
         $url = self::getQUeryParam($COU, $year);
         try {
@@ -114,27 +119,71 @@ class OECD {
 
         //各国のコードを配列に格納
         $countryCodes = [];
-        foreach($countryData as $data) {
+        foreach ($countryData as $data) {
             $countryCodes[] = $data->id;
         }
 
         //dataSetsからobservationsの値を取り出す
         $tmpData = [];
-        foreach($dataSets as $dataset) {
-            foreach($dataset->series as $series) {
+        foreach ($dataSets as $dataset) {
+            foreach ($dataset->series as $series) {
                 $count = $year;
                 $tmp = [];
                 foreach ($series->observations as $obsv) {
                     $tmp[$count] = $obsv[0];
-                    $count ++;
+                    $count++;
                 }
                 $tmpData[] = $tmp;
             }
         }
 
         //countryCodesをキーにtmpDataを統合
-        $obsvData = array_combine($countryCodes, $tmpData);     
-        
+        $obsvData = array_combine($countryCodes, $tmpData);
+
         return $obsvData;
+    }
+
+    function fetchAPIData($COU, $startYear)
+    {
+        $oecd = new OECD;
+        $data = $oecd->getInBoundData($COU, $startYear);
+        //各データをOECDDataオブジェクトにマッピングしてMySQLに保存
+        foreach ($data as $c_name => $nat) {
+            $dataModel = new OECDData;
+            $dataModel->Destination = $c_name;
+            foreach ($nat as $nat => $obsv) {
+                $dataModel->Nationality = $nat;
+                foreach ($obsv as $year => $value) {
+                    $dataModel->Value = $value;
+                    $dataModel->Year = $year;
+                    $dataModel->save();
+                }
+            }
+        }
+    }
+
+    function fetchAPIDataAll($startYear)
+    {
+        $oecd = new OECD;
+        $countryList = $oecd->getCountryList();
+
+        foreach ($countryList as $country) {
+            $COU = $country['code'];
+            //マッピング用のデータをAPIから取得
+            $data = $oecd->getInBoundData($COU, $startYear);
+            //各データをOECDDataオブジェクトにマッピングしてMySQLに保存
+            foreach ($data as $c_name => $nat) {
+                $dataModel = new OECDData;
+                $dataModel->Destination = $c_name;
+                foreach ($nat as $nat => $obsv) {
+                    $dataModel->Nationality = $nat;
+                    foreach ($obsv as $year => $value) {
+                        $dataModel->Value = $value;
+                        $dataModel->Year = $year;
+                        $dataModel->save();
+                    }
+                }
+            }
+        }
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\OECD;
+use App\Models\OECDData;
 
 class fetchAPIdata extends Command
 {
@@ -37,6 +39,20 @@ class fetchAPIdata extends Command
      */
     public function handle()
     {
-        return 0;
+        $oecd = new OECD;
+        $data = $oecd->getInBoundData("JPN", 2012);
+        //各データをOECDDataオブジェクトにマッピングしてMySQLに保存
+        foreach ($data as $c_name => $nat) {
+            $dataModel = new OECDData;
+            $dataModel->Destination = $c_name;
+            foreach ($nat as $nat => $obsv) {
+                $dataModel->Nationality = $nat;
+                foreach ($obsv as $year => $value) {
+                    $dataModel->Value = $value;
+                    $dataModel->Year = $year;
+                    $dataModel->save();
+                }
+            }
+        }
     }
 }
