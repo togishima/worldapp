@@ -41,25 +41,8 @@ controller.onCountryPicked(callback);
 
 function callback(selectedCountry) {
   let countryCode = selectedCountry.ISOCode;
-  $.ajax({
-    url: `/data/${countryCode}`,
-    type: 'GET',
-    dataType: 'json'
-  }).done(function (results) {
-    newInfo = results;
-    console.log(newInfo);
-    document.getElementById("c-name").innerHTML = newInfo.Country_Name;
-    document.getElementById("govt-form").innerHTML = newInfo.GovernmentForm;
-    document.getElementById("c-pop").innerHTML = (newInfo.Population / 1000000) + "M";
-    document.getElementById("c-gnp").innerHTML = newInfo.GNP;
-    document.getElementById("c-cap").innerHTML = newInfo.Capital;
-  }).fail(function (jqHXR, textStatus, errorThrown) {
-    alert('ファイルの取得に失敗しました。');
-    console.log("ajax通信に失敗しました")
-    console.log(jqXHR.status);
-    console.log(textStatus);
-    console.log(errorThrown.message);
-  });
+  updateCountryInfo(countryCode);
+  controller.setAutoRotation(false);
 };
 
 $('[name=year_selector').on('change', function () {
@@ -71,10 +54,9 @@ $('[name=year_selector').on('change', function () {
 $('[name=country_selector]').on('change', function () {
   var countryCode = $(this).val();
   controller.switchCountry(countryCode);
+  fetchData(countryCode);
   updateCountryInfo(countryCode);
 });
-
-
 
 function updateCountryInfo(countryCode) {
   $.ajax({
@@ -92,16 +74,14 @@ function updateCountryInfo(countryCode) {
   });
 };
 
-/*
-$('[name=country_selector]').on('change', function () {
-  var countryCode = $(this).val;
 
+function fetchData(countryCode) {
   $.ajax({
     url: `/json/${countryCode}`,
     type: 'GET',
     dataType: 'json'
   }).done(function (results) {
-    controller.clearData();
+    console.log(results);
     controller.addData(results);
     //controller.init();
   }).fail(function (jqHXR, textStatus, errorThrown) {
@@ -111,5 +91,4 @@ $('[name=country_selector]').on('change', function () {
     console.log(textStatus);
     console.log(errorThrown.message);
   });
-});
-*/
+};

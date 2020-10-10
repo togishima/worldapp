@@ -97,8 +97,10 @@ class OECD
     //指定した国の流入情報をAPIから取得
     function getInBoundData($COU, $year)
     {
-        //datasetsを取り出す
+        //指定された国コードの2013～2017年のデータを取得する
         $url = self::getQUeryParam($COU, $year);
+
+        //datasetsを取り出す処理
         try {
             $context = stream_context_create(array(
                 'http' => array('ignore_errors' => true)
@@ -110,37 +112,35 @@ class OECD
             if ($pos === false) {
                 return false;
             }
+
+            $countryData = $data->structure->dimensions->series[0]->values;
+            $dataSets = $data->dataSets;
+
+            //各国のコードを配列に格納
+            $countryCodes = [];
+            foreach ($countryData as $data) {
+                $countryCodes[] = $data->id;
+            }
+
+            //dataSetsからobservationsの値を取り出す
+            $tmpData = [];
+            foreach ($dataSets as $dataset) {
+                foreach ($dataset->series as $series) {
+                    $count = $year;
+                    $tmp = [];
+                    foreach ($series->observations as $obsv) {
+                        $tmp[$count] = $obsv[0];
+                        $count++;
+                    }
+                    $tmpData[] = $tmp;
+                }
+            }
+
+            //countryCodesをキーにtmpDataを統合して返す
+            return array_combine($countryCodes, $tmpData);
         } catch (\Throwable $th) {
             throw $th;
         }
-
-        $countryData = $data->structure->dimensions->series[0]->values;
-        $dataSets = $data->dataSets;
-
-        //各国のコードを配列に格納
-        $countryCodes = [];
-        foreach ($countryData as $data) {
-            $countryCodes[] = $data->id;
-        }
-
-        //dataSetsからobservationsの値を取り出す
-        $tmpData = [];
-        foreach ($dataSets as $dataset) {
-            foreach ($dataset->series as $series) {
-                $count = $year;
-                $tmp = [];
-                foreach ($series->observations as $obsv) {
-                    $tmp[$count] = $obsv[0];
-                    $count++;
-                }
-                $tmpData[] = $tmp;
-            }
-        }
-
-        //countryCodesをキーにtmpDataを統合
-        $obsvData = array_combine($countryCodes, $tmpData);
-
-        return $obsvData;
     }
 
     function fetchAPIData($COU)
@@ -150,11 +150,13 @@ class OECD
             for ($i = 0; $i < 5; $i++) {
                 $year = 2013 + $i;
                 $data = self::getInBoundData($COU, $year);
-                //各データをOECDDataオブジェクトにマッピングしてMySQLに保存
 
+                //データが取得できなければ次のループへ
                 if (empty($data)) {
                     continue;
                 }
+
+                //取得したデータをOECDDataオブジェクトにマッピングしてMySQLに保存
                 foreach ($data as $c_name => $obsv) {
                     if ($c_name == null || $obsv[$year] == null) {
                         continue;
@@ -168,7 +170,7 @@ class OECD
                         $dataModel->save();
                     }
                 }
-                echo "MySQLの" . $COU . "の" . $year . "年データを更新しました" . "\n";
+                echo "MySQL：" . $COU . "の" . $year . "年データを更新しました" . "\n";
             }
         } catch (\Throwable $th) {
             throw $th;

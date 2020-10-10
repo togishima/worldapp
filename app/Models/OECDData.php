@@ -15,14 +15,14 @@ class OECDData extends Model
     protected $Value;
     protected $Year;
 
-    public static function getMIGData($COU, $year)
+    public static function getMIGData($COU)
     {
         try {
-            $data = self::select('Nationality', 'Destination', 'Value')
+            $data = self::select('Nationality', 'Destination', 'Value', 'Year')
                 ->where('Destination', $COU)
                 ->orWhere('Nationality', $COU)
-                ->where('Year', $year)
                 ->where('Value', ">", 0)
+                ->orderby('Year', "Desc")
                 ->get();
             return $data;
         } catch (\Throwable $th) {

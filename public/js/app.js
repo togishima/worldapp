@@ -72790,26 +72790,7 @@ controller.onCountryPicked(callback);
 
 function callback(selectedCountry) {
   var countryCode = selectedCountry.ISOCode;
-  $.ajax({
-    url: "/data/".concat(countryCode),
-    type: 'GET',
-    dataType: 'json'
-  }).done(function (results) {
-    newInfo = results[0];
-    console.log(newInfo);
-    document.getElementById("c-name").innerHTML = newInfo.Country_Name;
-    document.getElementById("govt-form").innerHTML = newInfo.GovernmentForm;
-    document.getElementById("c-pop").innerHTML = newInfo.Population / 1000000 + "M";
-    document.getElementById("c-gnp").innerHTML = newInfo.GNP;
-    document.getElementById("c-cap").innerHTML = newInfo.Capital;
-    controller.switchCountry(countryCode);
-  }).fail(function (jqHXR, textStatus, errorThrown) {
-    alert('ファイルの取得に失敗しました。');
-    console.log("ajax通信に失敗しました");
-    console.log(jqXHR.status);
-    console.log(textStatus);
-    console.log(errorThrown.message);
-  });
+  updateCountryInfo(countryCode);
 }
 
 ;
@@ -72821,6 +72802,7 @@ $('[name=year_selector').on('change', function () {
 $('[name=country_selector]').on('change', function () {
   var countryCode = $(this).val();
   controller.switchCountry(countryCode);
+  fetchData(countryCode);
   updateCountryInfo(countryCode);
 });
 
@@ -72841,27 +72823,25 @@ function updateCountryInfo(countryCode) {
 }
 
 ;
-/*
-$('[name=country_selector]').on('change', function () {
-  var countryCode = $(this).val;
 
+function fetchData(countryCode) {
   $.ajax({
-    url: `/json/${countryCode}`,
+    url: "/json/".concat(countryCode),
     type: 'GET',
     dataType: 'json'
   }).done(function (results) {
-    controller.clearData();
-    controller.addData(results);
-    //controller.init();
+    console.log(results);
+    controller.addData(results); //controller.init();
   }).fail(function (jqHXR, textStatus, errorThrown) {
     alert('ファイルの取得に失敗しました。');
-    console.log("ajax通信に失敗しました")
+    console.log("ajax通信に失敗しました");
     console.log(jqXHR.status);
     console.log(textStatus);
     console.log(errorThrown.message);
   });
-});
-*/
+}
+
+;
 
 /***/ }),
 

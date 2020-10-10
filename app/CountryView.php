@@ -27,25 +27,48 @@ class CountryView
         try {
             //$CO を$COUに変換
             $COU = self::translateCountryCode($CO);
+
             //MySQLからデータを抽出
-            $data = OECDData::getMIGData($COU, 2017);
-            //データをGIO.js用に加工して返す
+            $data = OECDData::getMIGData($COU);
+            if (empty($data)) {
+                return false;
+            }
+            //格納用の連想配列を作成
             $GIOdata = [];
+            $GIOdata['dataSetKeys'] = [];
+            $GIOdata['initDataset'] = [];
+            foreach ($data as $record) {
+                if (empty($GIOdata['initDataSet'])) {
+                    $GIOdata['initDataSet'] = $record->Year;
+                }
+                if (array_search($record->Year, $GIOdata['dataSetKeys']) !== false) {
+                    continue;
+                }
+                $GIOdata['dataSetKeys'][] = $record->Year;
+                $GIOdata[(string)$record->Year] = [];
+            }
+
+            //データをGIO.js用に加工して返す
+
             foreach ($data as $obsv) {
+                //各プロパティを変数に格納
                 $e = self::translateCountryCode($obsv->Nationality);
+                $i = self::translateCountryCode($obsv->Destination);
+                $v = $obsv->Value;
+
                 if (isset($e)) {
                     $this->countryList[] = $e;
                 }
-                $i = self::translateCountryCode($obsv->Destination);
-                $v = $obsv->Value;
+
                 if (isset($e) && isset($i) && $v) {
-                    $GIOdata[] = [
+                    array_push($GIOdata[$obsv->Year], [
                         'e' => $e,
                         'i' => $i,
                         'v' => ($v * 1000)
-                    ];
+                    ]);
                 }
             }
+
             return $GIOdata;
         } catch (\Throwable $th) {
             throw $th;
