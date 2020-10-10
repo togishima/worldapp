@@ -20,7 +20,7 @@ class fetchAPIdata extends Command
      *
      * @var string
      */
-    protected $description = 'APIデータ取得（テスト用）';
+    protected $description = 'DBの国ごとのレコードをAPIデータから更新するバッチ';
 
     /**
      * Create a new command instance.

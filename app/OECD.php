@@ -146,6 +146,7 @@ class OECD
     function fetchAPIData($COU)
     {
         try {
+            //データは2013年～2017年の物を使用
             for ($i = 0; $i < 5; $i++) {
                 $year = 2013 + $i;
                 $data = self::getInBoundData($COU, $year);
