@@ -72791,6 +72791,7 @@ controller.onCountryPicked(callback);
 function callback(selectedCountry) {
   var countryCode = selectedCountry.ISOCode;
   updateCountryInfo(countryCode);
+  controller.setAutoRotation(false, 0);
 }
 
 ;
@@ -72804,6 +72805,7 @@ $('[name=country_selector]').on('change', function () {
   controller.switchCountry(countryCode);
   fetchData(countryCode);
   updateCountryInfo(countryCode);
+  $('[name=year_selector').val("2017");
 });
 
 function updateCountryInfo(countryCode) {

@@ -33,16 +33,17 @@ const configs = {
   }
 }
 const controller = new GIO.Controller(container, configs);
+const initCountry = "JP"
 
-controller.setInitCountry("JP");
-controller.addData(data);
+controller.setInitCountry(initCountry);
+fetchData(initCountry);
 controller.init();
-controller.onCountryPicked(callback);
 
+controller.onCountryPicked(callback);
 function callback(selectedCountry) {
   let countryCode = selectedCountry.ISOCode;
   updateCountryInfo(countryCode);
-  controller.setAutoRotation(false);
+  controller.setAutoRotation(false, 0);
 };
 
 $('[name=year_selector').on('change', function () {
@@ -56,6 +57,7 @@ $('[name=country_selector]').on('change', function () {
   controller.switchCountry(countryCode);
   fetchData(countryCode);
   updateCountryInfo(countryCode);
+  $('[name=year_selector').val("2017");
 });
 
 function updateCountryInfo(countryCode) {

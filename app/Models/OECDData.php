@@ -18,7 +18,8 @@ class OECDData extends Model
     public static function getMIGData($COU)
     {
         try {
-            $data = self::select('Nationality', 'Destination', 'Value', 'Year')
+            $data = self::from('oecd_data as data')
+                ->select('Nationality', 'Destination', 'Value', 'Year')
                 ->where('Destination', $COU)
                 ->orWhere('Nationality', $COU)
                 ->where('Value', ">", 0)
