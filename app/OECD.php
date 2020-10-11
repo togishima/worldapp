@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Models\OECDData;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 use Log;
 
@@ -10,44 +11,67 @@ class OECD
 {
     protected $countries = [];
     protected $nationalities = [];
-    protected $data = [];
+    protected $tanslationData = [];
 
     function __construct()
     {
         try {
-            //OECDの移民データベースの構造を取得
+            //XMLオブジェクトを生成
             $xml = file_get_contents('https://stats.oecd.org/restsdmx/sdmx.ashx/GetDataStructure/MIG');
             $xml = preg_replace('/(<\/?)\w+:([^>]*>)/', '$1$2', $xml); //get rid of namespaces
-            $xmlObject = simplexml_load_string($xml);
-            $codeList = $xmlObject->CodeLists->CodeList; //使用可能なコードを取得
+            $xmlObj = simplexml_load_string($xml);
+
+            //コード一覧を取得
+            $codeList = $xmlObj->CodeLists->CodeList; //使用可能なコードを取得
+
+            function extractCode($codeList)
+            {
+                $omitList = ["UUU", "YYY", "CAX", "CGX", "CEX", "EEA", "E15", "TOT"];
+                $list = [];
+                foreach ($codeList as $c_code) {
+                    $Code = $c_code->attributes()->value;
+
+                    if (strlen($Code) !== 3 || array_search($Code, $omitList) !== false) {
+                        continue;
+                    }
+
+                    $list[] = $c_code->attributes()->value;
+                }
+                return $list;
+            }
 
             //OECD加盟国の一覧を取得
-            $countryCodes = json_decode(json_encode($codeList[3]), true);
-            $countries = [];
-            foreach ($countryCodes['Code'] as $c) {
-                $countryName = trim($c['Description'][0]);
-                $countryCode = trim($c['@attributes']['value']);
-                if ($countryCode == "NMEC") {
-                    continue;
-                } else {
-                    $countries[] = ["Name" => $countryName, "code" => $countryCode];
-                }
-            }
-            $this->countries = $countries;
+            $this->countries = extractCode($codeList[3]);
 
             //クエリ可能な国籍一覧を取得
-            $countryCodes = json_decode(json_encode($codeList[0]), true);
-            $nationalities = [];
-            foreach ($countryCodes['Code'] as $c) {
-                $countryName = trim($c['Description'][0]);
-                $countryCode = trim($c['@attributes']['value']);
-                if ($countryCode == "NMEC") {
-                    continue;
-                } else {
-                    $nationalities[] = ["Name" => $countryName, "code" => $countryCode];
+            $this->nationalities = extractCode($codeList[0]);
+
+            //コード変換用の配列をセット
+            $this->translationData = DB::select('select Code, Code2 from country_code');
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
+    function translateCountryCode($code)
+    {
+        try {
+            $GIOCountryList = ['AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AW', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BR', 'BS', 'BT', 'BW', 'BY', 'BZ', 'CA', 'CD', 'CF', 'CG', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'EH', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD', 'GE', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GT', 'GU', 'GW', 'GY', 'HK', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM', 'IN', 'IQ', 'IR', 'IS', 'IT', 'JE', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MP', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PN', 'PR', 'PS', 'PT', 'PW', 'PY', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'ST', 'SV', 'SY', 'SZ', 'TC', 'TD', 'TG', 'TH', 'TJ', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'US', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU', 'WF', 'WS', 'YE', 'YT', 'ZA', 'ZM', 'ZW'];
+            //入力された国コードがISOコード（２文字）だった場合
+            if (strlen($code) == 2) {
+                $index = array_search($code, array_column($this->translationData, "Code2"));
+
+                if (array_search($code, $GIOCountryList) !== false && $index !== false) {
+                    return $this->translationData[$index]->Code;
+                }
+                //入力された国コードがISOコード出なかった場合
+            } else {
+                $index   = array_search($code, array_column($this->translationData, "Code"));
+                $ISOCode = $this->translationData[$index]->Code2;
+                if ($index !== false && array_search($ISOCode, $GIOCountryList) !== false) {
+                    return $ISOCode;
                 }
             }
-            $this->nationalities = $nationalities;
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -63,18 +87,18 @@ class OECD
     {
         try {
             $natList = $this->nationalities;
-            $targetIndex = array_search($COU, array_column($natList, "code"));
-            $targetCOU = $natList[$targetIndex]['code'];
+            $targetIndex = array_search($COU, $natList);
+            $targetCOU = $natList[$targetIndex];
 
             $query = [];
             $query[] = 'https://stats.oecd.org/SDMX-JSON/data/MIG/';
 
             foreach ($natList as $c) {
-                if ($c['code'] == $targetCOU || strlen($c['code']) >= 4 || $c['code'] == "TOT") {
+                if ($c == $targetCOU) {
                     continue;
-                } else {
-                    $query[] = $c['code'];
                 }
+
+                $query[] = $c;
 
                 if ($c !== end($natList)) {
                     $query[] = "+";
@@ -97,11 +121,11 @@ class OECD
     //指定した国の流入情報をAPIから取得
     function getInBoundData($COU, $year)
     {
-        //指定された国コードの2013～2017年のデータを取得する
-        $url = self::getQUeryParam($COU, $year);
-
         //datasetsを取り出す処理
         try {
+            //指定された国コードの2013～2017年のデータクエリの作成
+            $url = self::getQueryParam($COU, $year);
+
             $context = stream_context_create(array(
                 'http' => array('ignore_errors' => true)
             ));
@@ -157,18 +181,26 @@ class OECD
                 }
 
                 //取得したデータをOECDDataオブジェクトにマッピングしてMySQLに保存
-                foreach ($data as $c_name => $obsv) {
-                    if ($c_name == null || $obsv[$year] == null) {
+                foreach ($data as $c_code => $obsv) {
+
+                    if (empty($c_code) || empty($obsv[$year])) {
                         continue;
-                    } else {
-                        $dataModel = OECDData::firstOrNew([
-                            'Destination' => $COU,
-                            "Nationality" => $c_name,
-                            "Year" => $year
-                        ]);
-                        $dataModel->Value = $obsv[$year];
-                        $dataModel->save();
                     }
+
+                    $des = self::translateCountryCode($COU);
+                    $nat = self::translateCountryCode($c_code);
+
+                    if (empty($des) || empty($nat)) {
+                        continue;
+                    }
+
+                    $dataModel = OECDData::firstOrNew([
+                        "Destination" => $des,
+                        "Nationality" => $nat,
+                        "Year" => $year
+                    ]);
+                    $dataModel->Value = $obsv[$year];
+                    $dataModel->save();
                 }
                 echo "MySQL：" . $COU . "の" . $year . "年データを更新しました" . "\n";
             }

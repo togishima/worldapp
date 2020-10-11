@@ -13,12 +13,12 @@ class CreaeOecdDataTable extends Migration
      */
     public function up()
     {
-        Schema::create('oecd_data', function (Blueprint $table) {
+        Schema::create('oecdData', function (Blueprint $table) {
             $table->id();
-            $table->string('from');
-            $table->string('to');
-            $table->integer('value');
-            $table->string('year');
+            $table->string('Nationality');
+            $table->string('Destination');
+            $table->integer('Value');
+            $table->string('Year');
             $table->timestamps();
         });
     }
@@ -30,6 +30,6 @@ class CreaeOecdDataTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('oecd_data');
+        Schema::dropIfExists('oecdData');
     }
 }

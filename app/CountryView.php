@@ -4,19 +4,11 @@ namespace App;
 
 use App\Models\OECDData;
 use App\Models\Country;
-use Illuminate\Support\Facades\DB;
 use Log;
 
 class CountryView
 {
     protected $countryList = [];
-    protected $countryCodes;
-
-    function __construct()
-    {
-        //国コード変換用のリストを作成
-        $this->countryCodes = DB::select('select Code, Code2 from country_code');
-    }
 
     /**
      * @param 国コード（2文字）
@@ -25,11 +17,8 @@ class CountryView
     function getGIOData($CO)
     {
         try {
-            //$CO を$COUに変換
-            $COU = self::translateCountryCode($CO);
-
             //MySQLからデータを抽出
-            $data = OECDData::getMIGData($COU);
+            $data = OECDData::getMIGData($CO);
             if (empty($data)) {
                 return false;
             }
@@ -52,8 +41,8 @@ class CountryView
 
             foreach ($data as $obsv) {
                 //各プロパティを変数に格納
-                $e = self::translateCountryCode($obsv->Nationality);
-                $i = self::translateCountryCode($obsv->Destination);
+                $e = $obsv->Nationality;
+                $i = $obsv->Destination;
                 $v = $obsv->Value;
 
                 if (isset($e)) {
@@ -70,34 +59,6 @@ class CountryView
             }
 
             return $GIOdata;
-        } catch (\Throwable $th) {
-            throw $th;
-        }
-    }
-
-    /**
-     * @param 国コード（2文字 or 3文字）
-     * @return 国コード2文字⇒3文字、3文字⇒2文字
-     */
-    function translateCountryCode($code)
-    {
-        try {
-            $GIOCountryList = ['AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AW', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BR', 'BS', 'BT', 'BW', 'BY', 'BZ', 'CA', 'CD', 'CF', 'CG', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'EH', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD', 'GE', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GT', 'GU', 'GW', 'GY', 'HK', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM', 'IN', 'IQ', 'IR', 'IS', 'IT', 'JE', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MP', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PN', 'PR', 'PS', 'PT', 'PW', 'PY', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'ST', 'SV', 'SY', 'SZ', 'TC', 'TD', 'TG', 'TH', 'TJ', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'US', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU', 'WF', 'WS', 'YE', 'YT', 'ZA', 'ZM', 'ZW'];
-            //入力された国コードがISOコード（２文字）だった場合
-            if (strlen($code) == 2) {
-                $index = array_search($code, array_column($this->countryCodes, "Code2"));
-
-                if (array_search($code, $GIOCountryList) !== false && $index !== false) {
-                    return $this->countryCodes[$index]->Code;
-                }
-                //入力された国コードがISOコード出なかった場合
-            } else {
-                $index   = array_search($code, array_column($this->countryCodes, "Code"));
-                $ISOCode = $this->countryCodes[$index]->Code2;
-                if ($index !== false && array_search($ISOCode, $GIOCountryList) !== false) {
-                    return $ISOCode;
-                }
-            }
         } catch (\Throwable $th) {
             throw $th;
         }

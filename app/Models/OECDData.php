@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class OECDData extends Model
 {
-    protected $table = "oecd_data";
+    protected $table = "oecdData";
     protected $fillable = [
         'Destination', 'Nationality', 'Value', 'Year'
     ];
@@ -15,13 +15,13 @@ class OECDData extends Model
     protected $Value;
     protected $Year;
 
-    public static function getMIGData($COU)
+    public static function getMIGData($CO)
     {
         try {
-            $data = self::from('oecd_data as data')
+            $data = self::from('oecdData')
                 ->select('Nationality', 'Destination', 'Value', 'Year')
-                ->where('Destination', $COU)
-                ->orWhere('Nationality', $COU)
+                ->where('Destination', $CO)
+                ->orWhere('Nationality', $CO)
                 ->where('Value', ">", 0)
                 ->orderby('Year', "Desc")
                 ->get();

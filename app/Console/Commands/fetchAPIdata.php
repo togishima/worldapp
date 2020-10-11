@@ -42,11 +42,10 @@ class fetchAPIdata extends Command
         $oecd = new OECD;
         $countryList = $oecd->getCountryList();
 
-        foreach ($countryList as $country) {
-            $COU = $country['code'];
-            $oecd->fetchAPIDATA($COU);
+        foreach ($countryList as $COU) {
+            $oecd->fetchAPIDATA($COU[0]);
 
-            echo $country['Name'] . "のデータ更新が完了しました" . "\n";
+            echo $COU . "のデータ更新が完了しました" . "\n";
         }
     }
 }
