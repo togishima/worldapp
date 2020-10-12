@@ -122,18 +122,21 @@ class OECD
     //指定した国の流入情報をAPIから取得
     function getInBoundData($COU, $year)
     {
-        //datasetsを取り出す処理
+        //datasetsから必要な値等をを取り出す処理
         try {
             //指定された国コードの2013～2017年のデータクエリの作成
             $url = self::getQueryParam($COU, $year);
             $res = Http::withOptions(['http_errors' => false])->get($url);
 
+            //httpエラーの場合はfalseを返す
             if (($res->failed())) {
                 return false;
             }
 
+            //$res(json)をオブジェクトに変換
             $data = json_decode($res->body());
 
+            //国コードのリストと各年のデータを切り出し
             $countryData = $data->structure->dimensions->series[0]->values;
             $dataSets = $data->dataSets;
 
@@ -143,7 +146,7 @@ class OECD
                 $countryCodes[] = $data->id;
             }
 
-            //dataSetsからobservationsの値を取り出す
+            //dataSetsから各年のobservationsの値を配列(key = year, values = 値)に切り出し
             $tmpData = [];
             foreach ($dataSets as $dataset) {
                 foreach ($dataset->series as $series) {
@@ -180,23 +183,29 @@ class OECD
                 //取得したデータをOECDDataオブジェクトにマッピングしてMySQLに保存
                 foreach ($data as $c_code => $obsv) {
 
+                    //Destination or Nationalityがnullの場合は処理しない
                     if (empty($c_code) || empty($obsv[$year])) {
                         continue;
                     }
 
+                    //マッピング前にISOコードへ変換
                     $des = self::translateCountryCode($COU);
                     $nat = self::translateCountryCode($c_code);
 
+                    //コードを変換できなかった場合は処理しない
                     if (empty($des) || empty($nat)) {
                         continue;
                     }
 
+                    //マッピング用のモデルを呼び出す（データベースにない場合は新規でインスタンスを生成）
                     $dataModel = OECDData::firstOrNew([
                         "Destination" => $des,
                         "Nationality" => $nat,
                         "Year" => $year
                     ]);
                     $dataModel->Value = $obsv[$year];
+
+                    //マッピングしたプロパティを保存
                     $dataModel->save();
                 }
                 echo "MySQL：" . $COU . "の" . $year . "年データを更新しました" . "\n";
