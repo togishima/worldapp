@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Models\OECDData;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 use Log;
@@ -125,17 +126,13 @@ class OECD
         try {
             //指定された国コードの2013～2017年のデータクエリの作成
             $url = self::getQueryParam($COU, $year);
+            $res = Http::withOptions(['http_errors' => false])->get($url);
 
-            $context = stream_context_create(array(
-                'http' => array('ignore_errors' => true)
-            ));
-
-            $data = json_decode(file_get_contents($url, false, $context));
-
-            $pos = strpos($http_response_header[0], '200');
-            if ($pos === false) {
+            if (($res->failed())) {
                 return false;
             }
+
+            $data = json_decode($res->body());
 
             $countryData = $data->structure->dimensions->series[0]->values;
             $dataSets = $data->dataSets;
