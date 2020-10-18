@@ -13,6 +13,11 @@ class OECD {
     protected $nationalities = [];
     protected $tanslationData = [];
 
+    /**　コンストラクタ
+     * インスタンス変数に
+     * 1. OECDの構造を取得し、クエリに使える国名をリスト形式で取得し格納
+     * 2. データベースから国コード変換用のデータを取得格納
+     */
     function __construct() {
         try {
             //XMLオブジェクトを生成
@@ -82,11 +87,11 @@ class OECD {
         }
     }
 
-    function getCountryList() {
-        return $this->countries;
-    }
 
-    //APIクエリ用パラメーターの作成
+    /**
+     * @param $COU = 国コード str(3), $year = データ検索の開始年 int 4
+     * @return $quert = string （APIクエリ用の文字列） 
+     */
     function buildQueryString($COU, $year) {
         try {
             $natList = $this->nationalities;
