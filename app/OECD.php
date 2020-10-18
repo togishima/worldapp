@@ -8,14 +8,12 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 use Log;
 
-class OECD
-{
+class OECD {
     protected $countries = [];
     protected $nationalities = [];
     protected $tanslationData = [];
 
-    function __construct()
-    {
+    function __construct() {
         try {
             //XMLオブジェクトを生成
             $xml = file_get_contents('https://stats.oecd.org/restsdmx/sdmx.ashx/GetDataStructure/MIG');
@@ -25,8 +23,7 @@ class OECD
             //コード一覧を取得
             $codeList = $xmlObj->CodeLists->CodeList; //使用可能なコードを取得
 
-            function extractCode($codeList)
-            {
+            function extractCode($codeList) {
                 $omitList = ["UUU", "YYY", "CAX", "CGX", "CEX", "EEA", "E15", "TOT"];
                 $list = [];
                 foreach ($codeList as $c_code) {
@@ -54,38 +51,38 @@ class OECD
         }
     }
 
-    function translateCountryCode($code)
-    {
+    function translateCountryCode($code) {
         try {
             $GIOCountryList = ['AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AW', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BR', 'BS', 'BT', 'BW', 'BY', 'BZ', 'CA', 'CD', 'CF', 'CG', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'EH', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD', 'GE', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GT', 'GU', 'GW', 'GY', 'HK', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM', 'IN', 'IQ', 'IR', 'IS', 'IT', 'JE', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MP', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PN', 'PR', 'PS', 'PT', 'PW', 'PY', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'ST', 'SV', 'SY', 'SZ', 'TC', 'TD', 'TG', 'TH', 'TJ', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'US', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU', 'WF', 'WS', 'YE', 'YT', 'ZA', 'ZM', 'ZW'];
-            //入力された国コードがISOコード（２文字）だった場合
-            if (strlen($code) == 2) {
-                $index = array_search($code, array_column($this->translationData, "Code2"));
 
-                if (array_search($code, $GIOCountryList) !== false && $index !== false) {
-                    return $this->translationData[$index]->Code;
-                }
-                //入力された国コードがISOコード出なかった場合
-            } else {
-                $index   = array_search($code, array_column($this->translationData, "Code"));
-                $ISOCode = $this->translationData[$index]->Code2;
-                if ($index !== false && array_search($ISOCode, $GIOCountryList) !== false) {
-                    return $ISOCode;
-                }
+            switch (strlen($code)) {
+                case 2:
+                    $columnName = "Code";
+                    $index = array_search($code, array_column($this->translationData, "Code2"));
+                    break;
+                case 3:
+                    $columnName = "Code2";
+                    $index = array_search($code, array_column($this->translationData, "Code"));
+                    $code = $this->translationData[$index]->Code2;
+                    break;
+                default:
+                    return false;
+            }
+
+            if ($index !== false && array_search($code, $GIOCountryList) !== false) {
+                return $this->translationData[$index]->$columnName;
             }
         } catch (\Throwable $th) {
             throw $th;
         }
     }
 
-    function getCountryList()
-    {
+    function getCountryList() {
         return $this->countries;
     }
 
     //APIクエリ用パラメーターの作成
-    function getQueryParam($COU, $year)
-    {
+    function buildQueryString($COU, $year) {
         try {
             $natList = $this->nationalities;
             $targetIndex = array_search($COU, $natList);
@@ -120,12 +117,11 @@ class OECD
     }
 
     //指定した国の流入情報をAPIから取得
-    function getInBoundData($COU, $year)
-    {
+    function getInBoundData($COU, $year) {
         //datasetsから必要な値等をを取り出す処理
         try {
             //指定された国コードの2013～2017年のデータクエリの作成
-            $url = self::getQueryParam($COU, $year);
+            $url = self::buildQueryString($COU, $year);
             $res = Http::withOptions(['http_errors' => false])->get($url);
 
             //httpエラーの場合はfalseを返す
@@ -167,8 +163,7 @@ class OECD
         }
     }
 
-    function fetchAPIData($COU)
-    {
+    function fetchAPIData($COU) {
         try {
             //データは2013年～2017年の物を使用
             for ($i = 0; $i < 5; $i++) {
@@ -183,7 +178,7 @@ class OECD
                 //取得したデータをOECDDataオブジェクトにマッピングしてMySQLに保存
                 foreach ($data as $c_code => $obsv) {
 
-                    //Destination or Nationalityがnullの場合は処理しない
+                    //Destination or Nationalityに入るべきデータがnullの場合は処理しない
                     if (empty($c_code) || empty($obsv[$year])) {
                         continue;
                     }
